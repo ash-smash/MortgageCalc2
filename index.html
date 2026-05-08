@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortgage Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg3: #f0efe9;
+    --text: #1a1a18;
+    --text2: #5c5c58;
+    --text3: #9a9a94;
+    --border: #e2e2dc;
+    --border2: #ccccc4;
+    --accent: #1a4fdb;
+    --accent-light: #eef1fd;
+    --accent-text: #1a4fdb;
+    --success: #0f7a4a;
+    --success-bg: #edf7f2;
+    --warning: #a14d00;
+    --warning-bg: #fff4ec;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .calc-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 3rem;
+  }
+
+  .calc-header {
+    margin-bottom: 1.75rem;
+  }
+
+  .calc-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .calc-header p {
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font);
+    border: none;
+    background: none;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+    border-radius: 0;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Grid */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  @media (max-width: 560px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+
+  /* Fields */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-color .15s;
+  }
+
+  .input-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,79,219,.08);
+  }
+
+  .prefix, .suffix {
+    padding: 0 11px;
+    font-size: 14px;
+    color: var(--text3);
+    background: var(--bg2);
+    height: 40px;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+  }
+
+  .suffix { border-right: none; border-left: 1px solid var(--border); }
+
+  .input-row input, .input-row select {
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0 12px;
+    height: 40px;
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    font-family: var(--font);
+    min-width: 0;
+  }
+
+  .input-row input[type="number"] { font-family: var(--font-mono); }
+  select { cursor: pointer; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--text3);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .875rem;
+  }
+
+  /* Result card */
+  .result-card {
+    background: var(--bg2);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .result-label {
+    font-size: 12px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .result-main {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    font-family: var(--font-mono);
+  }
+
+  .result-main .unit {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text2);
+    font-family: var(--font);
+    letter-spacing: 0;
+  }
+
+  .breakdown {
+    margin-top: 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .breakdown-row span:last-child {
+    color: var(--text);
+    font-weight: 500;
+    font-family: var(--font-mono);
+  }
+
+  /* Bar */
+  .bar-wrap {
+    display: flex;
+    height: 6px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg3);
+    margin: 14px 0 10px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .leg-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Subtabs */
+  .subtabs {
+    display: flex;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 1rem 0 .75rem;
+  }
+
+  .subtab {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--text2);
+    border: none;
+    transition: background .12s, color .12s;
+    text-align: center;
+  }
+
+  .subtab:not(:last-child) { border-right: 1px solid var(--border2); }
+  .subtab.active { background: var(--text); color: var(--bg); }
+
+  /* Amortization */
+  .amort-wrap {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .amort-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .amort-table th {
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    text-align: left;
+    padding: 9px 14px;
+    color: var(--text2);
+    font-weight: 500;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    z-index: 1;
+  }
+
+  .amort-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .amort-table tr:last-child td { border: none; }
+  .amort-table tr:hover td { background: var(--bg2); }
+
+  /* Chart */
+  .chart-area {
+    padding: 1rem 0;
+    overflow: hidden;
+  }
+
+  /* Radio */
+  .radio-group { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+  }
+
+  .radio-group input {
+    accent-color: var(--accent);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+  }
+
+  /* Alerts */
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-top: 10px;
+    border: 1px solid;
+  }
+
+  .alert.warn { background: var(--warning-bg); color: var(--warning); border-color: #f5cba2; }
+  .alert.good { background: var(--success-bg); color: var(--success); border-color: #a3d9be; }
+
+  /* Buydown cards */
+  .buydown-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 1rem 0; }
+
+  .buydown-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+
+  .buydown-card .yr-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text3);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .buydown-card .yr-amt {
+    font-size: 22px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .buydown-card .yr-rate {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+
+  .buydown-card.highlight { border-color: var(--accent); background: var(--accent-light); }
+  .buydown-card.highlight .yr-amt { color: var(--accent-text); }
+
+  /* Disclaimer */
+  .disclaimer {
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.6;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Down payment split input */
+  .down-row {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-color .15s;
+  }
+  .down-row:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,79,219,.08); }
+  .down-row .prefix { border-right: 1px solid var(--border); }
+  .down-row input.pct-in { width: 56px; border-left: 1px solid var(--border); padding: 0 8px; }
+  .down-row .suffix { border-left: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="calc-wrap">
+  <div class="calc-header">
+    <h1>Mortgage Calculator</h1>
+    <p>Estimate your monthly mortgage payment</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('conv')">Conventional</button>
+    <button class="tab" onclick="switchTab('fha')">FHA</button>
+    <button class="tab" onclick="switchTab('va')">VA</button>
+    <button class="tab" onclick="switchTab('refi')">Refinance</button>
+    <button class="tab" onclick="switchTab('afford')">Affordability</button>
+    <button class="tab" onclick="switchTab('dscr')">DSCR</button>
+    <button class="tab" onclick="switchTab('buydown')">2-1 Buydown</button>
+  </div>
+
+  <!-- CONVENTIONAL -->
+  <div class="panel active" id="panel-conv">
+    <p class="section-label">Loan Details</p>
+    <div class="grid2">
+      <div class="field"><label>Home Price</label><div class="input-row"><span class="prefix">$</span><input type="number" id="c-price" value="350000" oninput="syncConvDown('$')"></div></div>
+      <div class="field"><label>Down Payment</label>
+        <div class="down-row"><span class="prefix">$</span><input type="number" id="c-down" value="70000" oninput="syncConvDown('$')"><input type="number" id="c-down-pct" class="pct-in" value="20" min="0" max="100" oninput="syncConvDown('%')"><span class="suffix">%</span></div>
+      </div>
+      <div class="field"><label>Loan Term</label><div class="input-row"><select id="c-term" onchange="calcConv()"><option value="360">30-Year Fixed</option><option value="240">20-Year Fixed</option><option value="180">15-Year Fixed</option><option value="120">10-Year Fixed</option></select></div></div>
+      <div class="field"><label>Interest Rate</label><div class="input-row"><input type="number" id="c-rate" value="6.5" step="0.125" oninput="calcConv()"><span class="suffix">%</span></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <hr class="divider">
+    <p class="section-label">Additional Costs</p>
+    <div class="grid3">
+      <div class="field"><label>Annual Property Tax</label><div class="input-row"><span class="prefix">$</span><input type="number" id="c-tax" value="4200" oninput="calcConv()"></div></div>
+      <div class="field"><label>Annual Home Insurance</label><div class="input-row"><span class="prefix">$</span><input type="number" id="c-ins" value="1500" oninput="calcConv()"></div></div>
+      <div class="field"><label>Monthly HOA Fees</label><div class="input-row"><span class="prefix">$</span><input type="number" id="c-hoa" value="0" oninput="calcConv()"></div></div>
+    </div>
+    <hr class="divider">
+    <p class="section-label">Credit &amp; PMI</p>
+    <div class="field" style="max-width:300px">
+      <label>Credit Score</label>
+      <div class="input-row"><select id="c-credit" onchange="calcConv()">
+        <option value="780">780+ (Excellent)</option><option value="760">760-779 (Excellent)</option>
+        <option value="740">740-759 (Very Good)</option><option value="720" selected>720-739 (Good)</option>
+        <option value="700">700-719 (Good)</option><option value="680">680-699 (Fair)</option>
+        <option value="660">660-679 (Fair)</option><option value="640">640-659 (Below Average)</option>
+        <option value="620">620-639 (Poor)</option>
+      </select></div>
+    </div>
+    <p class="hint" style="margin-top:6px">PMI is auto-calculated when down payment is less than 20%</p>
+    <hr class="divider">
+    <p class="section-label">Extra Payments</p>
+    <div class="field" style="max-width:280px"><label>Extra Monthly Principal Payment</label><div class="input-row"><span class="prefix">$</span><input type="number" id="c-extra" value="0" oninput="calcConv()"></div></div>
+    <p class="hint" style="margin-top:4px">See how extra payments reduce your loan payoff time</p>
+    <div class="result-card" id="c-result"></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubtab('c','breakdown')">Payment Breakdown</button>
+      <button class="subtab" onclick="switchSubtab('c','chart')">Amortization Chart</button>
+      <button class="subtab" onclick="switchSubtab('c','schedule')">Schedule</button>
+    </div>
+    <div id="c-sub-breakdown"></div>
+    <div id="c-sub-chart" style="display:none"></div>
+    <div id="c-sub-schedule" style="display:none"></div>
+  </div>
+
+  <!-- FHA -->
+  <div class="panel" id="panel-fha">
+    <p class="section-label">FHA Loan Details</p>
+    <div class="grid2">
+      <div class="field"><label>Home Price</label><div class="input-row"><span class="prefix">$</span><input type="number" id="f-price" value="350000" oninput="syncDown('f','$')"></div></div>
+      <div class="field"><label>Down Payment</label>
+        <div class="down-row"><span class="prefix">$</span><input type="number" id="f-down" value="12250" oninput="syncDown('f','$')"><input type="number" id="f-down-pct" class="pct-in" value="3.5" step="0.5" oninput="syncDown('f','%')"><span class="suffix">%</span></div>
+      </div>
+      <div class="field"><label>Loan Term</label><div class="input-row"><select id="f-term" onchange="calcFHA()"><option value="360">30-Year Fixed</option><option value="240">20-Year Fixed</option><option value="180">15-Year Fixed</option><option value="120">10-Year Fixed</option></select></div></div>
+      <div class="field"><label>Interest Rate</label><div class="input-row"><input type="number" id="f-rate" value="6.5" step="0.125" oninput="calcFHA()"><span class="suffix">%</span></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <hr class="divider">
+    <p class="section-label">Additional Costs</p>
+    <div class="grid3">
+      <div class="field"><label>Annual Property Tax</label><div class="input-row"><span class="prefix">$</span><input type="number" id="f-tax" value="4200" oninput="calcFHA()"></div></div>
+      <div class="field"><label>Annual Home Insurance</label><div class="input-row"><span class="prefix">$</span><input type="number" id="f-ins" value="1500" oninput="calcFHA()"></div></div>
+      <div class="field"><label>Monthly HOA Fees</label><div class="input-row"><span class="prefix">$</span><input type="number" id="f-hoa" value="0" oninput="calcFHA()"></div></div>
+    </div>
+    <div class="result-card" id="f-result"></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubtab('f','breakdown')">Payment Breakdown</button>
+      <button class="subtab" onclick="switchSubtab('f','chart')">Amortization Chart</button>
+      <button class="subtab" onclick="switchSubtab('f','schedule')">Schedule</button>
+    </div>
+    <div id="f-sub-breakdown"></div>
+    <div id="f-sub-chart" style="display:none"></div>
+    <div id="f-sub-schedule" style="display:none"></div>
+  </div>
+
+  <!-- VA -->
+  <div class="panel" id="panel-va">
+    <p class="section-label">VA Loan Details</p>
+    <div class="grid2">
+      <div class="field"><label>Home Price</label><div class="input-row"><span class="prefix">$</span><input type="number" id="v-price" value="350000" oninput="syncDown('v','$')"></div></div>
+      <div class="field"><label>Down Payment</label>
+        <div class="down-row"><span class="prefix">$</span><input type="number" id="v-down" value="0" oninput="syncDown('v','$')"><input type="number" id="v-down-pct" class="pct-in" value="0" oninput="syncDown('v','%')"><span class="suffix">%</span></div>
+      </div>
+      <div class="field"><label>Loan Term</label><div class="input-row"><select id="v-term" onchange="calcVA()"><option value="360">30-Year Fixed</option><option value="240">20-Year Fixed</option><option value="180">15-Year Fixed</option><option value="120">10-Year Fixed</option></select></div></div>
+      <div class="field"><label>Interest Rate</label><div class="input-row"><input type="number" id="v-rate" value="6.5" step="0.125" oninput="calcVA()"><span class="suffix">%</span></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <hr class="divider">
+    <p class="section-label">VA Options</p>
+    <div class="grid2">
+      <div class="field"><label>First Time Use?</label><div class="radio-group"><label><input type="radio" name="va-first" value="yes" checked onchange="calcVA()"> Yes</label><label><input type="radio" name="va-first" value="no" onchange="calcVA()"> No</label></div></div>
+      <div class="field"><label>Disabled Veteran?</label><div class="radio-group"><label><input type="radio" name="va-disabled" value="no" checked onchange="calcVA()"> No</label><label><input type="radio" name="va-disabled" value="yes" onchange="calcVA()"> Yes</label></div></div>
+    </div>
+    <p class="hint">Disabled veterans are exempt from the VA funding fee</p>
+    <hr class="divider">
+    <p class="section-label">Additional Costs</p>
+    <div class="grid3">
+      <div class="field"><label>Annual Property Tax</label><div class="input-row"><span class="prefix">$</span><input type="number" id="v-tax" value="4200" oninput="calcVA()"></div></div>
+      <div class="field"><label>Annual Home Insurance</label><div class="input-row"><span class="prefix">$</span><input type="number" id="v-ins" value="1500" oninput="calcVA()"></div></div>
+      <div class="field"><label>Monthly HOA Fees</label><div class="input-row"><span class="prefix">$</span><input type="number" id="v-hoa" value="0" oninput="calcVA()"></div></div>
+    </div>
+    <div class="result-card" id="v-result"></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubtab('v','breakdown')">Payment Breakdown</button>
+      <button class="subtab" onclick="switchSubtab('v','chart')">Amortization Chart</button>
+      <button class="subtab" onclick="switchSubtab('v','schedule')">Schedule</button>
+    </div>
+    <div id="v-sub-breakdown"></div>
+    <div id="v-sub-chart" style="display:none"></div>
+    <div id="v-sub-schedule" style="display:none"></div>
+  </div>
+
+  <!-- REFINANCE -->
+  <div class="panel" id="panel-refi">
+    <p class="section-label">Current Loan</p>
+    <div class="grid2">
+      <div class="field"><label>Current Loan Amount</label><div class="input-row"><span class="prefix">$</span><input type="number" id="r-cur-amt" value="280000" oninput="calcRefi()"></div></div>
+      <div class="field"><label>Current Interest Rate</label><div class="input-row"><input type="number" id="r-cur-rate" value="7.5" step="0.125" oninput="calcRefi()"><span class="suffix">%</span></div></div>
+      <div class="field"><label>Months Remaining</label><div class="input-row"><input type="number" id="r-cur-term" value="324" oninput="calcRefi()"></div></div>
+    </div>
+    <hr class="divider">
+    <p class="section-label">New Loan</p>
+    <div class="grid2">
+      <div class="field"><label>New Loan Amount</label><div class="input-row"><span class="prefix">$</span><input type="number" id="r-new-amt" value="280000" oninput="calcRefi()"></div></div>
+      <div class="field"><label>New Interest Rate</label><div class="input-row"><input type="number" id="r-new-rate" value="6.0" step="0.125" oninput="calcRefi()"><span class="suffix">%</span></div></div>
+      <div class="field"><label>New Term (months)</label><div class="input-row"><input type="number" id="r-new-term" value="360" oninput="calcRefi()"></div></div>
+      <div class="field"><label>Refinance Fees</label><div class="input-row"><span class="prefix">$</span><input type="number" id="r-fees" value="4000" oninput="calcRefi()"></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <div class="result-card" id="r-result"></div>
+  </div>
+
+  <!-- AFFORDABILITY -->
+  <div class="panel" id="panel-afford">
+    <p class="section-label">Your Finances</p>
+    <div class="grid2">
+      <div class="field"><label>Annual Income</label><div class="input-row"><span class="prefix">$</span><input type="number" id="a-income" value="100000" oninput="calcAfford()"></div></div>
+      <div class="field"><label>Monthly Debts</label><div class="input-row"><span class="prefix">$</span><input type="number" id="a-debts" value="500" oninput="calcAfford()"></div></div>
+      <div class="field"><label>Est. Annual Property Taxes</label><div class="input-row"><span class="prefix">$</span><input type="number" id="a-tax" value="4200" oninput="calcAfford()"></div></div>
+      <div class="field"><label>Est. Annual Home Insurance</label><div class="input-row"><span class="prefix">$</span><input type="number" id="a-ins" value="1500" oninput="calcAfford()"></div></div>
+      <div class="field"><label>Down Payment</label><div class="input-row"><span class="prefix">$</span><input type="number" id="a-down" value="50000" oninput="calcAfford()"></div></div>
+      <div class="field"><label>Interest Rate</label><div class="input-row"><input type="number" id="a-rate" value="6.5" step="0.125" oninput="calcAfford()"><span class="suffix">%</span></div></div>
+      <div class="field"><label>Loan Term</label><div class="input-row"><select id="a-term" onchange="calcAfford()"><option value="360">30-Year Fixed</option><option value="240">20-Year Fixed</option><option value="180">15-Year Fixed</option><option value="120">10-Year Fixed</option></select></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <div class="result-card" id="a-result"></div>
+  </div>
+
+  <!-- DSCR -->
+  <div class="panel" id="panel-dscr">
+    <p class="section-label">DSCR Loan Details</p>
+    <div class="grid2">
+      <div class="field"><label>Property Purchase Price</label><div class="input-row"><span class="prefix">$</span><input type="number" id="d-price" value="350000" oninput="syncDown('d','$')"></div></div>
+      <div class="field"><label>Down Payment</label>
+        <div class="down-row"><span class="prefix">$</span><input type="number" id="d-down" value="70000" oninput="syncDown('d','$')"><input type="number" id="d-down-pct" class="pct-in" value="20" oninput="syncDown('d','%')"><span class="suffix">%</span></div>
+      </div>
+      <div class="field"><label>Interest Rate</label><div class="input-row"><input type="number" id="d-rate" value="7.5" step="0.125" oninput="calcDSCR()"><span class="suffix">%</span></div></div>
+      <div class="field"><label>Loan Term</label><div class="input-row"><select id="d-term" onchange="calcDSCR()"><option value="360">30-Year Fixed</option><option value="240">20-Year Fixed</option><option value="180">15-Year Fixed</option><option value="120">10-Year Fixed</option></select></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <hr class="divider">
+    <p class="section-label">Rental Income</p>
+    <div class="grid2">
+      <div class="field"><label>Monthly Rental Income</label><div class="input-row"><span class="prefix">$</span><input type="number" id="d-rent" value="2800" oninput="calcDSCR()"></div></div>
+      <div class="field"><label>Desired DSCR Ratio</label><div class="input-row"><input type="number" id="d-target" value="1.25" step="0.05" oninput="calcDSCR()"></div></div>
+    </div>
+    <hr class="divider">
+    <p class="section-label">Additional Costs</p>
+    <div class="grid3">
+      <div class="field"><label>Annual Property Tax</label><div class="input-row"><span class="prefix">$</span><input type="number" id="d-tax" value="4200" oninput="calcDSCR()"></div></div>
+      <div class="field"><label>Annual Insurance</label><div class="input-row"><span class="prefix">$</span><input type="number" id="d-ins" value="1500" oninput="calcDSCR()"></div></div>
+      <div class="field"><label>Monthly HOA</label><div class="input-row"><span class="prefix">$</span><input type="number" id="d-hoa" value="0" oninput="calcDSCR()"></div></div>
+    </div>
+    <div class="result-card" id="d-result"></div>
+    <p class="hint">DSCR loans are for investment properties. A DSCR of 1.25 or higher is typically required to qualify.</p>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubtab('d','breakdown')">Payment Breakdown</button>
+      <button class="subtab" onclick="switchSubtab('d','chart')">Amortization Chart</button>
+      <button class="subtab" onclick="switchSubtab('d','schedule')">Schedule</button>
+    </div>
+    <div id="d-sub-breakdown"></div>
+    <div id="d-sub-chart" style="display:none"></div>
+    <div id="d-sub-schedule" style="display:none"></div>
+  </div>
+
+  <!-- 2-1 BUYDOWN -->
+  <div class="panel" id="panel-buydown">
+    <p class="section-label">2-1 Buydown Loan Details</p>
+    <div class="grid2">
+      <div class="field"><label>Home Price</label><div class="input-row"><span class="prefix">$</span><input type="number" id="b-price" value="350000" oninput="syncDown('b','$')"></div></div>
+      <div class="field"><label>Down Payment</label>
+        <div class="down-row"><span class="prefix">$</span><input type="number" id="b-down" value="70000" oninput="syncDown('b','$')"><input type="number" id="b-down-pct" class="pct-in" value="20" oninput="syncDown('b','%')"><span class="suffix">%</span></div>
+      </div>
+      <div class="field"><label>Interest Rate (Note Rate)</label><div class="input-row"><input type="number" id="b-rate" value="7.0" step="0.125" oninput="calcBuydown()"><span class="suffix">%</span></div></div>
+      <div class="field"><label>Loan Term</label><div class="input-row"><select id="b-term" onchange="calcBuydown()"><option value="360">30-Year Fixed</option><option value="240">20-Year Fixed</option><option value="180">15-Year Fixed</option><option value="120">10-Year Fixed</option></select></div></div>
+    </div>
+    <p class="hint">Connect with your Loan Officer for the most accurate rates</p>
+    <hr class="divider">
+    <p class="section-label">Additional Costs</p>
+    <div class="grid3">
+      <div class="field"><label>Annual Property Tax</label><div class="input-row"><span class="prefix">$</span><input type="number" id="b-tax" value="4200" oninput="calcBuydown()"></div></div>
+      <div class="field"><label>Annual Insurance</label><div class="input-row"><span class="prefix">$</span><input type="number" id="b-ins" value="1500" oninput="calcBuydown()"></div></div>
+      <div class="field"><label>Monthly HOA</label><div class="input-row"><span class="prefix">$</span><input type="number" id="b-hoa" value="0" oninput="calcBuydown()"></div></div>
+    </div>
+    <p class="section-label" style="margin-top:1.5rem">Payment Schedule</p>
+    <div class="buydown-grid" id="b-schedule-cards"></div>
+    <div class="result-card" id="b-result"></div>
+    <p class="hint">A 2-1 buydown temporarily reduces your interest rate by 2% in Year 1 and 1% in Year 2. The loan amortizes at the full note rate. Payments shown include P&amp;I, tax, insurance, and HOA.</p>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubtab('b','breakdown')">Payment Breakdown</button>
+      <button class="subtab" onclick="switchSubtab('b','chart')">Amortization Chart</button>
+      <button class="subtab" onclick="switchSubtab('b','schedule')">Schedule</button>
+    </div>
+    <div id="b-sub-breakdown"></div>
+    <div id="b-sub-chart" style="display:none"></div>
+    <div id="b-sub-schedule" style="display:none"></div>
+  </div>
+
+  <p class="disclaimer">*Hypothetical monthly mortgage payments reflect hypothetical Principal, Interest, Taxes, Insurance, and HOA amounts. These figures and rates are for educational purposes only and do not reflect an official mortgage loan offer. This does not constitute tax advice.</p>
+</div>
+
+<script>
+const COLORS = { pi:'#3b6ff0', tax:'#d4900a', ins:'#2da06b', pmi:'#d94f4f', hoa:'#8b5cf6', mip:'#d94f4f' };
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function pmt(P, r, n) {
+  if (!P || !n) return 0;
+  if (r === 0) return P / n;
+  return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+}
+
+function switchTab(id) {
+  const ids = ['conv','fha','va','refi','afford','dscr','buydown'];
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ids[i] === id));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+function switchSubtab(prefix, sub) {
+  const subs = ['breakdown','chart','schedule'];
+  const panelId = {c:'conv',f:'fha',v:'va',d:'dscr',b:'buydown'}[prefix];
+  const panel = document.getElementById('panel-' + panelId);
+  panel.querySelectorAll('.subtab').forEach((t, i) => t.classList.toggle('active', subs[i] === sub));
+  subs.forEach(s => {
+    const el = document.getElementById(prefix + '-sub-' + s);
+    if (el) el.style.display = s === sub ? 'block' : 'none';
+  });
+}
+
+function buildResult(total, rows) {
+  const barParts = rows.map(r => `<div style="width:${(r.v/total*100).toFixed(1)}%;background:${COLORS[r.cls]};height:100%"></div>`).join('');
+  const legend = rows.map(r => `<div class="leg-item"><div class="leg-dot" style="background:${COLORS[r.cls]}"></div>${r.label}</div>`).join('');
+  const breakdown = rows.map(r => `<div class="breakdown-row"><span>${r.label}</span><span>${fmt(r.v)}</span></div>`).join('');
+  return `<div class="result-label">Estimated Monthly Payment</div>
+<div class="result-main">${fmt(total)}</div>
+<div class="bar-wrap">${barParts}</div>
+<div class="legend">${legend}</div>
+<div class="breakdown">${breakdown}</div>`;
+}
+
+function buildBreakdown(rows) {
+  return '<div class="breakdown">' + rows.map(r => `<div class="breakdown-row"><span>${r.label}</span><span>${fmt(r.v)}</span></div>`).join('') + '</div>';
+}
+
+function buildAmort(loan, r, n) {
+  const mp = pmt(loan, r, n);
+  let bal = loan, rows = [];
+  for (let yr = 1; yr <= Math.ceil(n / 12); yr++) {
+    let prin = 0, int = 0;
+    const months = Math.min(12, n - (yr - 1) * 12);
+    for (let m = 0; m < months; m++) {
+      if (bal <= 0) break;
+      const intM = bal * r;
+      const p = mp - intM;
+      prin += p; int += intM; bal = Math.max(0, bal - p);
+    }
+    rows.push({ yr, prin, int, bal });
+  }
+  return rows;
+}
+
+function amortTable(rows) {
+  const trs = rows.map(r => `<tr><td>Year ${r.yr}</td><td>${fmt(r.prin)}</td><td>${fmt(r.int)}</td><td>${fmt(r.bal)}</td></tr>`).join('');
+  return `<div class="amort-wrap"><table class="amort-table"><thead><tr><th>Year</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+
+function amortChart(rows) {
+  const maxBal = rows[0] ? rows[0].bal + rows[0].prin + rows[0].int : 1;
+  const W = 680, H = 160, padL = 10, padR = 10, padT = 10, padB = 30;
+  const cW = W - padL - padR, cH = H - padT - padB;
+  const xS = cW / (rows.length - 1 || 1);
+  const yS = cH / maxBal;
+
+  let balPts = '', intPts = '';
+  rows.forEach((r, i) => {
+    const x = padL + i * xS;
+    balPts += `${x.toFixed(1)},${(padT + cH - r.bal * yS).toFixed(1)} `;
+    intPts += `${x.toFixed(1)},${(padT + cH - r.int * yS).toFixed(1)} `;
+  });
+
+  const yLabels = [0, 0.5, 1].map(pct => {
+    const val = maxBal * pct;
+    const y = padT + cH - val * yS;
+    return `<text x="${padL - 4}" y="${y.toFixed(1)}" font-size="10" fill="var(--text3)" text-anchor="end" dominant-baseline="middle">${val >= 1000 ? '$' + (val/1000).toFixed(0) + 'k' : '$0'}</text><line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="0.5"/>`;
+  }).join('');
+
+  return `<div class="chart-area">
+<svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+${yLabels}
+<polyline points="${balPts.trim()}" fill="none" stroke="#3b6ff0" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="${intPts.trim()}" fill="none" stroke="#d94f4f" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+<text x="${padL}" y="${H - 6}" font-size="10" fill="var(--text3)">Yr 1</text>
+<text x="${W - padR}" y="${H - 6}" font-size="10" fill="var(--text3)" text-anchor="end">Yr ${rows.length}</text>
+</svg>
+<div class="legend" style="margin-top:6px">
+<div class="leg-item"><div class="leg-dot" style="background:#3b6ff0"></div>Remaining Balance</div>
+<div class="leg-item"><div class="leg-dot" style="background:#d94f4f"></div>Annual Interest</div>
+</div></div>`;
+}
+
+function fillSubtabs(prefix, loan, r, n) {
+  const rows = buildAmort(loan, r, n);
+  const chartEl = document.getElementById(prefix + '-sub-chart');
+  const schedEl = document.getElementById(prefix + '-sub-schedule');
+  if (chartEl) chartEl.innerHTML = amortChart(rows);
+  if (schedEl) schedEl.innerHTML = amortTable(rows);
+}
+
+// Sync helpers
+function syncConvDown(type) {
+  const price = +document.getElementById('c-price').value || 0;
+  if (type === '$') {
+    const d = +document.getElementById('c-down').value || 0;
+    document.getElementById('c-down-pct').value = price ? (d / price * 100).toFixed(1) : 0;
+  } else {
+    const pct = +document.getElementById('c-down-pct').value || 0;
+    document.getElementById('c-down').value = Math.round(price * pct / 100);
+  }
+  calcConv();
+}
+
+function syncDown(p, type) {
+  const price = +document.getElementById(p + '-price').value || 0;
+  if (type === '$') {
+    const d = +document.getElementById(p + '-down').value || 0;
+    document.getElementById(p + '-down-pct').value = price ? (d / price * 100).toFixed(1) : 0;
+  } else {
+    const pct = +document.getElementById(p + '-down-pct').value || 0;
+    document.getElementById(p + '-down').value = Math.round(price * pct / 100);
+  }
+  ({ f: calcFHA, v: calcVA, d: calcDSCR, b: calcBuydown })[p]();
+}
+
+// Calculators
+function calcConv() {
+  const price = +document.getElementById('c-price').value || 0;
+  const down = +document.getElementById('c-down').value || 0;
+  const loan = price - down;
+  const r = (+document.getElementById('c-rate').value || 0) / 100 / 12;
+  const n = +document.getElementById('c-term').value || 360;
+  const tax = (+document.getElementById('c-tax').value || 0) / 12;
+  const ins = (+document.getElementById('c-ins').value || 0) / 12;
+  const hoa = +document.getElementById('c-hoa').value || 0;
+  const dpPct = price ? down / price : 0;
+  const pmi = dpPct < 0.2 ? loan * 0.008 / 12 : 0;
+  const pi = pmt(loan, r, n);
+  const total = pi + tax + ins + hoa + pmi;
+  const rows = [
+    { cls:'pi', label:'Principal & Interest', v:pi },
+    { cls:'tax', label:'Property Tax', v:tax },
+    { cls:'ins', label:'Home Insurance', v:ins },
+  ];
+  if (pmi > 0) rows.push({ cls:'pmi', label:'PMI', v:pmi });
+  if (hoa > 0) rows.push({ cls:'hoa', label:'HOA', v:hoa });
+  document.getElementById('c-result').innerHTML = buildResult(total, rows);
+  document.getElementById('c-sub-breakdown').innerHTML = buildBreakdown(rows);
+  fillSubtabs('c', loan, r, n);
+}
+
+function calcFHA() {
+  const price = +document.getElementById('f-price').value || 0;
+  const down = +document.getElementById('f-down').value || 0;
+  const baseLoan = price - down;
+  const ufmip = baseLoan * 0.0175;
+  const loan = baseLoan + ufmip;
+  const r = (+document.getElementById('f-rate').value || 0) / 100 / 12;
+  const n = +document.getElementById('f-term').value || 360;
+  const tax = (+document.getElementById('f-tax').value || 0) / 12;
+  const ins = (+document.getElementById('f-ins').value || 0) / 12;
+  const hoa = +document.getElementById('f-hoa').value || 0;
+  const mip = baseLoan * 0.0055 / 12;
+  const pi = pmt(loan, r, n);
+  const total = pi + mip + tax + ins + hoa;
+  const rows = [
+    { cls:'pi', label:'Principal & Interest', v:pi },
+    { cls:'mip', label:'Monthly MIP', v:mip },
+    { cls:'tax', label:'Property Tax', v:tax },
+    { cls:'ins', label:'Home Insurance', v:ins },
+  ];
+  if (hoa > 0) rows.push({ cls:'hoa', label:'HOA', v:hoa });
+  let html = buildResult(total, rows);
+  html += `<div class="breakdown-row" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">Upfront MIP (rolled in)</span><span style="font-weight:500;font-family:var(--font-mono)">${fmt(ufmip)}</span></div>`;
+  document.getElementById('f-result').innerHTML = html;
+  document.getElementById('f-sub-breakdown').innerHTML = buildBreakdown(rows);
+  fillSubtabs('f', loan, r, n);
+}
+
+function calcVA() {
+  const price = +document.getElementById('v-price').value || 0;
+  const down = +document.getElementById('v-down').value || 0;
+  const baseLoan = price - down;
+  const firstUse = document.querySelector('input[name="va-first"]:checked')?.value === 'yes';
+  const disabled = document.querySelector('input[name="va-disabled"]:checked')?.value === 'yes';
+  const dpPct = price ? down / price : 0;
+  let feeRate = 0;
+  if (!disabled) {
+    if (firstUse) feeRate = dpPct >= 0.1 ? 0.014 : dpPct >= 0.05 ? 0.015 : 0.0215;
+    else feeRate = dpPct >= 0.1 ? 0.014 : dpPct >= 0.05 ? 0.015 : 0.033;
+  }
+  const fee = baseLoan * feeRate;
+  const loan = baseLoan + fee;
+  const r = (+document.getElementById('v-rate').value || 0) / 100 / 12;
+  const n = +document.getElementById('v-term').value || 360;
+  const tax = (+document.getElementById('v-tax').value || 0) / 12;
+  const ins = (+document.getElementById('v-ins').value || 0) / 12;
+  const hoa = +document.getElementById('v-hoa').value || 0;
+  const pi = pmt(loan, r, n);
+  const total = pi + tax + ins + hoa;
+  const rows = [
+    { cls:'pi', label:'Principal & Interest', v:pi },
+    { cls:'tax', label:'Property Tax', v:tax },
+    { cls:'ins', label:'Home Insurance', v:ins },
+  ];
+  if (hoa > 0) rows.push({ cls:'hoa', label:'HOA', v:hoa });
+  let html = buildResult(total, rows);
+  if (fee > 0) html += `<div class="breakdown-row" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">VA Funding Fee (${(feeRate*100).toFixed(2)}%, rolled in)</span><span style="font-weight:500;font-family:var(--font-mono)">${fmt(fee)}</span></div>`;
+  document.getElementById('v-result').innerHTML = html;
+  document.getElementById('v-sub-breakdown').innerHTML = buildBreakdown(rows);
+  fillSubtabs('v', loan, r, n);
+}
+
+function calcRefi() {
+  const curAmt = +document.getElementById('r-cur-amt').value || 0;
+  const curRate = (+document.getElementById('r-cur-rate').value || 0) / 100 / 12;
+  const curTerm = +document.getElementById('r-cur-term').value || 360;
+  const newAmt = +document.getElementById('r-new-amt').value || 0;
+  const newRate = (+document.getElementById('r-new-rate').value || 0) / 100 / 12;
+  const newTerm = +document.getElementById('r-new-term').value || 360;
+  const fees = +document.getElementById('r-fees').value || 0;
+  const curPmt = pmt(curAmt, curRate, curTerm);
+  const newPmt = pmt(newAmt, newRate, newTerm);
+  const monthly = curPmt - newPmt;
+  const lifetime = monthly * newTerm - fees;
+  const be = monthly > 0 ? Math.ceil(fees / monthly) : null;
+  let html = `<div class="result-label">Refinancing could save you</div>
+<div class="result-main">${fmt(Math.max(0, monthly))}<span class="unit">/month</span></div>
+<div class="breakdown" style="margin-top:14px">
+<div class="breakdown-row"><span>New Monthly Payment</span><span>${fmt(newPmt)}</span></div>
+<div class="breakdown-row"><span>Current Monthly Payment</span><span>${fmt(curPmt)}</span></div>
+<div class="breakdown-row"><span>Refinance Fees</span><span>${fmt(fees)}</span></div>
+<div class="breakdown-row"><span>Lifetime Savings</span><span>${fmt(Math.max(0, lifetime))}</span></div>
+${be ? `<div class="breakdown-row"><span>Break-Even Point</span><span>${be} months</span></div>` : ''}
+</div>`;
+  if (monthly <= 0) html += `<div class="alert warn" style="margin-top:12px">Refinancing may not reduce your payment at these rates.</div>`;
+  document.getElementById('r-result').innerHTML = html;
+}
+
+function calcAfford() {
+  const income = +document.getElementById('a-income').value || 0;
+  const debts = +document.getElementById('a-debts').value || 0;
+  const tax = (+document.getElementById('a-tax').value || 0) / 12;
+  const ins = (+document.getElementById('a-ins').value || 0) / 12;
+  const down = +document.getElementById('a-down').value || 0;
+  const r = (+document.getElementById('a-rate').value || 0) / 100 / 12;
+  const n = +document.getElementById('a-term').value || 360;
+  const maxMonthly = income / 12 * 0.43 - debts;
+  const maxPI = maxMonthly - tax - ins;
+  const maxLoan = maxPI > 0 && r > 0 ? maxPI * (1 - Math.pow(1 + r, -n)) / r : 0;
+  const maxPrice = Math.max(0, maxLoan + down);
+  document.getElementById('a-result').innerHTML = `
+<div class="result-label">You can afford up to</div>
+<div class="result-main">${fmt(maxPrice)}</div>
+<div class="breakdown" style="margin-top:14px">
+<div class="breakdown-row"><span>Max Monthly Housing (43% DTI)</span><span>${fmt(Math.max(0, maxMonthly))}</span></div>
+<div class="breakdown-row"><span>Principal & Interest</span><span>${fmt(Math.max(0, maxPI))}</span></div>
+<div class="breakdown-row"><span>Tax (monthly)</span><span>${fmt(tax)}</span></div>
+<div class="breakdown-row"><span>Insurance (monthly)</span><span>${fmt(ins)}</span></div>
+</div>`;
+}
+
+function calcDSCR() {
+  const price = +document.getElementById('d-price').value || 0;
+  const down = +document.getElementById('d-down').value || 0;
+  const loan = price - down;
+  const r = (+document.getElementById('d-rate').value || 0) / 100 / 12;
+  const n = +document.getElementById('d-term').value || 360;
+  const rent = +document.getElementById('d-rent').value || 0;
+  const target = +document.getElementById('d-target').value || 1.25;
+  const tax = (+document.getElementById('d-tax').value || 0) / 12;
+  const ins = (+document.getElementById('d-ins').value || 0) / 12;
+  const hoa = +document.getElementById('d-hoa').value || 0;
+  const pi = pmt(loan, r, n);
+  const totalExp = pi + tax + ins + hoa;
+  const dscr = totalExp > 0 ? rent / totalExp : 0;
+  const good = dscr >= target;
+  const rows = [
+    { cls:'pi', label:'Monthly P&I', v:pi },
+    { cls:'tax', label:'Property Tax', v:tax },
+    { cls:'ins', label:'Insurance', v:ins },
+  ];
+  if (hoa > 0) rows.push({ cls:'hoa', label:'HOA', v:hoa });
+  let html = `<div class="result-label">Debt Service Coverage Ratio</div>
+<div class="result-main">${dscr.toFixed(2)}</div>
+<div class="alert ${good ? 'good' : 'warn'}" style="margin-top:10px">${good ? '✓ Meets target DSCR of ' + target : '✗ Below ' + target + ' target — may not qualify'}</div>
+<div class="breakdown" style="margin-top:12px">
+<div class="breakdown-row"><span>Monthly P&I</span><span>${fmt(pi)}</span></div>
+<div class="breakdown-row"><span>Total Monthly Expenses</span><span>${fmt(totalExp)}</span></div>
+<div class="breakdown-row"><span>Gross Monthly Rent</span><span>${fmt(rent)}</span></div>
+<div class="breakdown-row"><span>Net Operating Income</span><span>${fmt(rent)}</span></div>
+</div>`;
+  document.getElementById('d-result').innerHTML = html;
+  document.getElementById('d-sub-breakdown').innerHTML = buildBreakdown(rows);
+  fillSubtabs('d', loan, r, n);
+}
+
+function calcBuydown() {
+  const price = +document.getElementById('b-price').value || 0;
+  const down = +document.getElementById('b-down').value || 0;
+  const loan = price - down;
+  const noteRate = (+document.getElementById('b-rate').value || 0) / 100;
+  const n = +document.getElementById('b-term').value || 360;
+  const tax = (+document.getElementById('b-tax').value || 0) / 12;
+  const ins = (+document.getElementById('b-ins').value || 0) / 12;
+  const hoa = +document.getElementById('b-hoa').value || 0;
+  const r1 = (noteRate - 0.02) / 12;
+  const r2 = (noteRate - 0.01) / 12;
+  const r3 = noteRate / 12;
+  const pi1 = pmt(loan, r1, n);
+  const pi2 = pmt(loan, r2, n);
+  const pi3 = pmt(loan, r3, n);
+  const cost = 12 * (pi3 - pi1) + 12 * (pi3 - pi2);
+  const t1 = pi1 + tax + ins + hoa;
+  const t2 = pi2 + tax + ins + hoa;
+  const t3 = pi3 + tax + ins + hoa;
+  const yrs = Math.round(n / 12);
+  document.getElementById('b-schedule-cards').innerHTML = `
+<div class="buydown-card highlight">
+  <div class="yr-tag">Year 1</div>
+  <div class="yr-amt">${fmt(t1)}</div>
+  <div class="yr-rate">${((noteRate - 0.02) * 100).toFixed(3).replace(/\.?0+$/, '')}% rate</div>
+</div>
+<div class="buydown-card">
+  <div class="yr-tag">Year 2</div>
+  <div class="yr-amt">${fmt(t2)}</div>
+  <div class="yr-rate">${((noteRate - 0.01) * 100).toFixed(3).replace(/\.?0+$/, '')}% rate</div>
+</div>
+<div class="buydown-card">
+  <div class="yr-tag">Years 3–${yrs}</div>
+  <div class="yr-amt">${fmt(t3)}</div>
+  <div class="yr-rate">${(noteRate * 100).toFixed(3).replace(/\.?0+$/, '')}% rate</div>
+</div>`;
+  const rows = [
+    { cls:'pi', label:'Principal & Interest', v:pi3 },
+    { cls:'tax', label:'Property Tax', v:tax },
+    { cls:'ins', label:'Home Insurance', v:ins },
+  ];
+  if (hoa > 0) rows.push({ cls:'hoa', label:'HOA', v:hoa });
+  let html = buildResult(t3, rows);
+  html += `<div class="breakdown-row" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">Buydown Cost (typically paid by seller/builder)</span><span style="font-weight:500;font-family:var(--font-mono)">${fmt(cost)}</span></div>`;
+  document.getElementById('b-result').innerHTML = html;
+  document.getElementById('b-sub-breakdown').innerHTML = buildBreakdown(rows);
+  fillSubtabs('b', loan, r3, n);
+}
+
+// Init
+calcConv(); calcFHA(); calcVA(); calcRefi(); calcAfford(); calcDSCR(); calcBuydown();
+</script>
+</body>
+</html>
